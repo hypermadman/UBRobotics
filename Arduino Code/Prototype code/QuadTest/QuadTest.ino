@@ -5,17 +5,17 @@
 #include <NewPing.h>
 //Stepper stuff
 #include <Wire.h>
-#include <Adafruit_MotorShield.h>
-#include "utility/Adafruit_MS_PWMServoDriver.h"
+//#include <Adafruit_MotorShield.h>
+//#include "utility/Adafruit_MS_PWMServoDriver.h"
 
 // Create the motor shield object with the default I2C address
-Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
+//Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
 // Or, create it with a different I2C address (say for stacking)
 // Adafruit_MotorShield AFMS = Adafruit_MotorShield(0x61); 
 
 // Connect a stepper motor with 200 steps per revolution (1.8 degree)
 // to motor port #2 (M3 and M4)
-Adafruit_StepperMotor *myMotor = AFMS.getStepper(200, 1);
+//Adafruit_StepperMotor *myMotor = AFMS.getStepper(200, 1);
 
 int leftArm = 40; //Pin numbers for seashell arms
 int rightArm = 41;
@@ -26,11 +26,11 @@ int pull = 47; //pull string
 int rightAngle = 110;
 int greenButton = 49; //Pin of green button for mode selection
 int buzzerPin = 37; //Pin of buzzer
-MecanumRover rover(22,5,7,9,
-                   11,4,6,8,
-                   18,19,2,3,
+MecanumRover rover(4,6,8,10,
+                   5,7,9,11,
+                   2,3,20,21,
                    0,1,2,3,
-                   60,10,49); //1-4 Direction Pins, 5-8 PWM Pins, 9-12 Interrupt Pins, 13-16 Current Read Pins, 15 Base Speed, 16 Correction Factor, 17 Buzzer Pin 
+                   200,10,49); //1-4 Direction Pins, 5-8 PWM Pins, 9-12 Interrupt Pins, 13-16 Current Read Pins, 15 Base Speed, 16 Correction Factor, 17 Buzzer Pin 
 
 NewPing frontSensor(13, 12, 100);
 NewPing rearSensor(31, 32, 100);
@@ -39,10 +39,10 @@ void setup(){
   // put your setup code here, to run once:
 Serial.begin(9600);
 
-AFMS.begin();  // create with the default frequency 1.6KHz
+//AFMS.begin();  // create with the default frequency 1.6KHz
 //AFMS.begin(1000);  // OR with a different frequency, say 1KHz
 
-myMotor->setSpeed(100);  // 100 rpm   
+//myMotor->setSpeed(100);  // 100 rpm   
 
 //pinMode(greenButton, INPUT);
 attachInterrupt(digitalPinToInterrupt(rover.interruptPin[0]), count0, CHANGE);
@@ -51,35 +51,21 @@ attachInterrupt(digitalPinToInterrupt(rover.interruptPin[2]), count2, CHANGE);
 attachInterrupt(digitalPinToInterrupt(rover.interruptPin[3]), count3, CHANGE);
 //rover.testHardware();
 
-HCMAX7219 HCMAX7219(10);
+//HCMAX7219 HCMAX7219(10);
 Serial.println(digitalRead(greenButton));
 
-myMotor->step(100, FORWARD, SINGLE); //600 lowers it 90
-myMotor->step(100, BACKWARD, SINGLE);
+//myMotor->step(100, FORWARD, SINGLE); //600 lowers it 90
+//myMotor->step(100, BACKWARD, SINGLE);
 
 leftClose();
 rightClose();
-rover.testHardware();
-
-  if (digitalRead(greenButton) == HIGH){ //Check if GREEN BUTTON was pressed
-    HCMAX7219.Clear();
-    delay(1000);
-    HCMAX7219.print7Seg("GREEN", 8); //Green mode
-    delay(1000);
-    HCMAX7219.Refresh();
-    delay(1000);
-    waiting();
-  }
-  else {
-    HCMAX7219.Clear();
-    delay(1000);
-    HCMAX7219.print7Seg("PURPLE", 8); //Purple mode
-    delay(1000);
-    HCMAX7219.Refresh(); 
-    delay(1000);
-    waiting();
-    eurobotPurple();
-  }
+rover.move(300,frontSensor,rearSensor);
+delay(100);
+rover.move(-300,frontSensor,rearSensor);
+delay(100);
+rover.turn(300);
+delay(100);
+rover.turn(-300);
 }
 
 void loop() {
@@ -104,6 +90,7 @@ void count3(){
   rover.counter[3] ++;
   rover.encoderChangeTime[3] = millis();
 }
+//End interrupt code
 
 void leftClose(){
   arm.attach(leftArm);
@@ -154,9 +141,9 @@ void eurobotPurple(){
   rover.turn(-rightAngle);
   rover.strafe(-300);
   //Lower the arm
-  myMotor->step(600, FORWARD, SINGLE); 
+  //myMotor->step(600, FORWARD, SINGLE); 
   //rover.move(-400,frontSensor,rearSensor);
-  myMotor->step(600, BACKWARD, SINGLE); 
+  //myMotor->step(600, BACKWARD, SINGLE); 
   
   /* 
   rover.turn(-rightAngle);
@@ -168,23 +155,5 @@ void eurobotPurple(){
   rover.turn(-rightAngle);
   rover.move(1000,frontSensor,rearSensor); //To 4 then home
   */
-}
-
-void waiting(){
-
-  pinMode(pull, INPUT);
-  delay(1000);
-  
-  HCMAX7219 HCMAX7219(10);
-  delay(1000);
-  HCMAX7219.Clear();
-  delay(1000);
-  HCMAX7219.print7Seg("STANDBY", 8); //Purple mode
-  delay(1000);
-  HCMAX7219.Refresh(); 
-  
-  while (digitalRead(pull) == LOW){
-    delay(1);
-  }
 }
 
