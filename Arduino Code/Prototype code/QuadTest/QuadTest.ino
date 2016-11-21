@@ -32,8 +32,8 @@ MecanumRover rover(4,6,8,10,
                    0,1,2,3,
                    200,10,49); //1-4 Direction Pins, 5-8 PWM Pins, 9-12 Interrupt Pins, 13-16 Current Read Pins, 15 Base Speed, 16 Correction Factor, 17 Buzzer Pin 
 
-NewPing frontSensor(13, 12, 100);
-NewPing rearSensor(31, 32, 100);
+NewPing frontSensor(14, 15, 100);
+NewPing rearSensor(16, 17, 100);
 
 void setup(){
   // put your setup code here, to run once:
