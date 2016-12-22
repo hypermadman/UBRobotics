@@ -5,6 +5,12 @@
 // © UBRobotics 2016
 // Written by Ed Chamberlain
 //
+// UNFINISHED
+//
+// This sketch will acts as a simple odometry and positioning system
+// for a differential drive robot running using EMG30 (or similar)
+// motors.
+//
 // This sketch requires an arduino board with 4+ inturrupts such as
 // the 101, Mega, zero, Leonardo, Micro, Due.
 //
@@ -31,9 +37,9 @@
 
 // define vector struct
 struct vector {
-  float x;
-  float y;
-  float o;
+  float x; // x component
+  float y; // y component
+  float o; // orientation component
 };
 
 // Set initial position here:
@@ -46,15 +52,15 @@ static const int wheelDiam = 100;
 // Set which pin the wheel encoders are connected to. These must
 // be inturrpt enabled. Ensure encoders are pulled up to VCC
 // using suitably selected resistors.
-#define LeftEnc1 1
-#define LeftEnc2 2
-#define RightEnc1 3
-#define RightEnc2 4
+#define LeftEncA 1
+#define LeftEncB 2
+#define RightEncA 3
+#define RightEncB 4
 
 #define pi 3.14159
 float wheelStep;
 float angleStep;
-float leftx, rightx, lefty, righty; // call compWheelPos() before
+float leftx, rightx, lefty, righty;
 
 vector travel;
 
@@ -69,18 +75,18 @@ void setup() {
   Serial.println("SETUP: Serial init");
 
   // init inturrpts
-  attachInterrupt(digitalPinToInterrupt(LeftEnc1), ISRLeftEnc1,
+  attachInterrupt(digitalPinToInterrupt(LeftEncA), ISRLeftEncA,
                   FALLING);
-  attachInterrupt(digitalPinToInterrupt(LeftEnc2), ISRLeftEnc2,
+  attachInterrupt(digitalPinToInterrupt(LeftEncB), ISRLeftEncB,
                   FALLING);
-  attachInterrupt(digitalPinToInterrupt(RightEnc1), ISRRightEnc1,
+  attachInterrupt(digitalPinToInterrupt(RightEncA), ISRRightEncA,
                   FALLING);
-  attachInterrupt(digitalPinToInterrupt(RightEnc2), ISRRightEnc2,
+  attachInterrupt(digitalPinToInterrupt(RightEncB), ISRRightEncB,
                   FALLING);
   Serial.println("SETUP: ISR init");
 
-  //compute global variables
-  wheelStep = 100 * pi / 180;
+  //compute constant global variables based on robot dynamics
+  wheelStep = 100 * pi / 360;
   angleStep = rad2deg(wheelStep / wheelBase);
 
   // compute step vector
@@ -91,7 +97,7 @@ void setup() {
   // debug variables
   Serial.println("SETUP: Global Values init");
   Serial.print("NOTE: wheelStep = ");
-  Serial.println(angleStep);
+  Serial.println(wheelStep);
   Serial.print("NOTE: angleStep = ");
   Serial.println(angleStep);
   Serial.print("NOTE: travel.x = ");
@@ -139,6 +145,9 @@ vector rotateVector(vector input, float pheta) {
 }
 
 void leftEnc () {
+
+  // please update to include reverse detection
+  
   vector rotated = rotateVector(travel, pos.o);
   pos.x = pos.x + rotated.x;
   pos.y = pos.y - rotated.y;
@@ -147,6 +156,9 @@ void leftEnc () {
 }
 
 void rightEnc () {
+
+  // please update to include reverse detection
+  
   vector rotated = rotateVector(travel, pos.o);
   pos.x = pos.x + rotated.x;
   pos.y = pos.y + rotated.y;
