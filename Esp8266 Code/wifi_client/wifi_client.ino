@@ -1,7 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-const char* ssid = "robot network";
+const char* ssid = "UDP-listener";
 const char* password = "1234567890";
 
 WiFiUDP Udp;
@@ -15,7 +15,7 @@ void setup()
   Serial.println();
 
   Serial.printf("Connecting to %s ", ssid);
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssid);
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
