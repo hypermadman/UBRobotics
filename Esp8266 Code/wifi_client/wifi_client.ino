@@ -1,7 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 
-const char* ssid = "UDP-listener";
+const char* ssid = "robot network";
 const char* password = "1234567890";
 
 WiFiUDP Udp;
@@ -15,7 +15,7 @@ void setup()
   Serial.println();
 
   Serial.printf("Connecting to %s ", ssid);
-  WiFi.begin(ssid);
+  WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
@@ -31,21 +31,28 @@ void loop()
 {
   // send back a reply, to the IP address and port we got the packet from
   String msg = Serial.readStringUntil('\n');
+
+  unsigned long sending = millis();
+  
   Udp.beginPacket(target, udpPort);
   Udp.write(msg.c_str());
   Udp.endPacket();
+  unsigned long sent = millis();
 
   int packetSize = Udp.parsePacket();
   if (packetSize)
   {
     // receive incoming UDP packets
-    Serial.printf("Received %d bytes from %s, port %d\n", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+    
     int len = Udp.read(incomingPacket, 255);
     if (len > 0)
     {
       incomingPacket[len] = 0;
     }
+    unsigned long after = millis();
+    Serial.printf("Received %d bytes.\n", packetSize);
     Serial.printf("UDP packet contents: %s\n", incomingPacket);
+    Serial.printf("Took %lums to send, %lums for reply.", sent-sending, after-sent); 
 
   }
 }
