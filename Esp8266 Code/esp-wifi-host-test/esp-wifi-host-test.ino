@@ -9,9 +9,11 @@ char  replyPacekt[] = "Hi there! Got the message :-)";  // a reply string to sen
 IPAddress local_IP(192,168,0,1);
 IPAddress gateway(192,168,0,1);
 IPAddress subnet(255,255,255,0);
+bool ledstatus = true;
 
 void setup()
 {
+  pinMode(2, OUTPUT);
   Serial.begin(115200);
   Serial.println();
 
@@ -39,7 +41,7 @@ void loop()
       incomingPacket[len] = 0;
     }
     Serial.printf("UDP packet contents: %s\n", incomingPacket);
-
+     digitalWrite(2, ledstatus);
     // send back a reply, to the IP address and port we got the packet from
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(replyPacekt);
