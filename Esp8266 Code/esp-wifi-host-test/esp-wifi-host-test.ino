@@ -14,6 +14,7 @@ bool ledstatus = true;
 void setup()
 {
   pinMode(2, OUTPUT);
+  digitalWrite(2, ledstatus);
   Serial.begin(115200);
   Serial.println();
 
@@ -41,7 +42,9 @@ void loop()
       incomingPacket[len] = 0;
     }
     Serial.printf("UDP packet contents: %s\n", incomingPacket);
-     digitalWrite(2, ledstatus);
+    
+    ledstatus = !ledstatus;
+    digitalWrite(2, ledstatus);
     // send back a reply, to the IP address and port we got the packet from
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(replyPacekt);
