@@ -4,7 +4,6 @@
 WiFiUDP Udp;
 unsigned int localUdpPort = 4210;  // local port to listen on
 char incomingPacket[255];  // buffer for incoming packets
-char  replyPacekt[] = "Hi there! Got the message :-)";  // a reply string to send back
 
 IPAddress local_IP(192,168,0,1);
 IPAddress gateway(192,168,0,1);
@@ -47,7 +46,7 @@ void loop()
     digitalWrite(2, ledstatus);
     // send back a reply, to the IP address and port we got the packet from
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    Udp.write(replyPacekt);
+    Udp.write(incomingPacket);
     Udp.endPacket();
   }
 }
