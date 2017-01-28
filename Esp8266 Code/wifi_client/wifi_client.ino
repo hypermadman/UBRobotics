@@ -23,16 +23,16 @@ void setup()
   }
   Serial.println(" connected");
 
-  Udp.begin(localUdpPort);
-  Serial.printf("Now listening at IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), localUdpPort);
+  Udp.begin(udpPort);
+  Serial.printf("Now listening for reply at IP %s, UDP port %d\n", WiFi.localIP().toString().c_str(), udpPort);
 }
 
 void loop()
 {
   // send back a reply, to the IP address and port we got the packet from
-  String msg = Serial.readStringUntil();
+  String msg = Serial.readStringUntil('\n');
   Udp.beginPacket(target, udpPort);
-  Udp.write(msg);
+  Udp.write(msg.c_str());
   Udp.endPacket();
 
   int packetSize = Udp.parsePacket();
