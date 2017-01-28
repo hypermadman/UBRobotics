@@ -5,10 +5,10 @@ const char* ssid = "robot network";
 const char* password = "1234567890";
 
 WiFiUDP Udp;
-unsigned int localUdpPort = 4210;  // local port to listen on
+unsigned int udpPort = 4210;  // local port to listen on
 char incomingPacket[255];  // buffer for incoming packets
-char  replyPacekt[] = "Hi there! Got the message :-)";  // a reply string to send back
-
+char  sendPacket[] = "Hi there! Got the message :-)";  // a reply string to send back
+IPAddress target(192,168,0,1);
 void setup()
 {
   Serial.begin(115200);
@@ -29,6 +29,12 @@ void setup()
 
 void loop()
 {
+  // send back a reply, to the IP address and port we got the packet from
+  String msg = Serial.readStringUntil();
+  Udp.beginPacket(target, udpPort);
+  Udp.write(msg);
+  Udp.endPacket();
+
   int packetSize = Udp.parsePacket();
   if (packetSize)
   {
@@ -41,10 +47,6 @@ void loop()
     }
     Serial.printf("UDP packet contents: %s\n", incomingPacket);
 
-    // send back a reply, to the IP address and port we got the packet from
-    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    Udp.write(replyPacekt);
-    Udp.endPacket();
   }
 }
 
