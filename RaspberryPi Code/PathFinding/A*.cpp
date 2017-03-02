@@ -5,6 +5,9 @@
 #include <cstdlib>
 #include <unistd.h>
 
+#include "Vector2D.cpp"
+#include "Node.cpp"
+
 //TODO mix going diagonally and inlinelly to make path shorter for robot
 //TODO what if goal is on obstacle?
 //TODO add proper visualization
@@ -16,48 +19,6 @@
 #define INLINE_COST 10
 #define DIAGONAL_COST 14
 #define DELAY 10000
-
-struct Vector2D{
-    int x, y;
-
-    Vector2D(){}
-
-    Vector2D(int x, int y){
-        this->x = x;
-        this->y = y;
-    }
-
-    bool operator == (Vector2D &v){
-        return (this->x == v.x && this->y == v.y);
-    }
-
-    bool operator != (Vector2D &v){
-        return (this->x != v.x || this->y != v.y);
-    }
-};
-
-struct Node{
-    bool isObstacle;
-    bool wasClosed;
-    Node* parent;
-    std::list<Node*> inlineNeighbours;
-    std::list<Node*> diagonalNeighbours;
-    Vector2D position;
-    int costSoFar;
-    int heuristic;
-
-    Node(){
-        this->isObstacle = false;
-        this->wasClosed = false;
-        this->parent = NULL;
-        this->costSoFar = INT_MAX;
-        this->heuristic = INT_MAX;
-    }
-
-    Node(Vector2D position) : Node(){
-        this->position = position;
-    }
-};
 
 //visualization
 void printBoard(Node** board, Vector2D goal){
