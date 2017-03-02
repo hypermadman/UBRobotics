@@ -1,2 +1,5 @@
+#c++ object files
 *.o
 
+#executive A* file
+RaspberryPi\ Code/PathFinding/A\*
