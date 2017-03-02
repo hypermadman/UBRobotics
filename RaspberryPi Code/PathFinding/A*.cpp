@@ -1,43 +1,23 @@
-#include <cmath>
 #include <list>
 #include <climits>
 #include <cstdio>
-#include <cstdlib>
-#include <unistd.h>
 
 #include "Vector2D.cpp"
 #include "Node.cpp"
-
 //TODO mix going diagonally and inlinelly to make path shorter for robot
 //TODO what if goal is on obstacle?
-//TODO add proper visualization
 //TODO make class responsible for friendly obstacles creation
 //TODO make a board struct and add getters and setters
+
+#define VISUALIZE 1 //0 for no visualization, 1 for visualization
+#ifdef VISUALIZE
+    #include "Visualizer.cpp"
+#endif
 
 #define WIDTH 250
 #define HEIGHT 75
 #define INLINE_COST 10
 #define DIAGONAL_COST 14
-#define DELAY 10000
-
-//visualization
-void printBoard(Node** board, Vector2D goal){
-    for(int i=0; i<HEIGHT; i++){
-        for(int j=0; j<WIDTH; j++){
-            if(Vector2D(j, i) == goal)
-                printf("!");
-            else if(board[j][i].wasClosed)
-                printf("x");
-            else if(board[j][i].isObstacle)
-                printf("0");
-            else
-                printf(".");
-        }
-
-        printf("\n");
-    }
-}
-// /visualization
 
 class PathFinder{
      public:
@@ -62,11 +42,9 @@ class PathFinder{
                 currNode = openNodes.front();
                 openNodes.pop_front();
 
-                //usleep(DELAY);
-                std::system("clear");
-                printBoard(board, goal);
-
                 //printf("current node: (%d, %d)\n", currNode->position.x, currNode->position.y);
+                if(VISUALIZE)
+                    Visualizer::visualize(board, boardSize, goal);
 
                 currNode->wasClosed = true;
 
@@ -225,7 +203,9 @@ int main(int argc, char **argv){
     PathFinder pathFinder = PathFinder(obstacles, obstaclesNumber, Vector2D(WIDTH, HEIGHT));
     printf("PathFinder initialized\n");
 
-    usleep(DELAY*500);
+    if(VISUALIZE)
+        Visualizer::waitForUser();
+
     //loop TODO
     Vector2D start = Vector2D(200, 70); //TODO wczytywanie
     Vector2D goal = Vector2D (0, 0); //TODO wczytywanie
@@ -239,4 +219,3 @@ int main(int argc, char **argv){
     // /loop
     return 0;
 }
-
