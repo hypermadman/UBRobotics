@@ -6,24 +6,25 @@
 class Visualizer{
     public:
         static void waitForUser(){
-            usleep(DELAY*500);
+            usleep(DELAY*200);
         }
 
-        static void visualize(Node** board, Vector2D boardSize, Vector2D goal){
+        static void visualize(Board board, Vector2D goal){
             std::system("clear");
-            printBoard(board, boardSize, goal);
+            printBoard(board, goal);
             usleep(DELAY);
         }
 
     private:
-        static void printBoard(Node** board, Vector2D boardSize, Vector2D goal){
-            for(int i=0; i<boardSize.y; i++){
-                for(int j=0; j<boardSize.x; j++){
-                    if(Vector2D(j, i) == goal)
+        static void printBoard(Board board, Vector2D goal){
+            for(int i=0; i<board.getHeight(); i++){
+                for(int j=0; j<board.getWidth(); j++){
+                    Vector2D coordinates = Vector2D(j, i);
+                    if(coordinates == goal)
                         printf("!");
-                    else if(board[j][i].wasClosed)
+                    else if(board.getNode(coordinates).wasClosed)
                         printf("x");
-                    else if(board[j][i].isObstacle)
+                    else if(board.getNode(coordinates).isObstacle)
                         printf("0");
                     else
                         printf(".");

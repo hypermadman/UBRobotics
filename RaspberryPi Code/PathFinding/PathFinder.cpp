@@ -2,49 +2,45 @@
 #include <climits>
 #include <cstdio>
 
-#include "Vector2D.cpp"
-#include "Node.cpp"
 //TODO mix going diagonally and inlinelly to make path shorter for robot
-//TODO what if goal is on obstacle?
 //TODO make class responsible for friendly obstacles creation
-//TODO make a board struct and add getters and setters
 
 #define VISUALIZE 1 //0 for no visualization, 1 for visualization
+#define WIDTH 250 //set width of the board
+#define HEIGHT 75 //set height of the board
+
+#define INLINE_COST 10 //don't change it, unless you know what you are doing
+#define DIAGONAL_COST 14 //don't change it, unless you know what you are doing
+
+#include "Vector2D.cpp"
+#include "Node.cpp"
+#include "Board.cpp"
 #ifdef VISUALIZE
     #include "Visualizer.cpp"
 #endif
 
-#define WIDTH 250
-#define HEIGHT 75
-#define INLINE_COST 10
-#define DIAGONAL_COST 14
 
 class PathFinder{
      public:
-         PathFinder(Vector2D* obstacles, int obstaclesNumber, Vector2D _boardSize): boardSize(_boardSize){ //TODO extract init methods
-            initializeBoard();
-            initializeObstacles(obstacles, obstaclesNumber);
-            initializeNeighbours();
-        }
+        PathFinder(Vector2D* obstacles, int obstaclesNumber, Vector2D boardSize)
+        : board(obstacles, obstaclesNumber, boardSize) {}
 
         std::list<Vector2D> getPath(Vector2D &start, Vector2D &goal){
-            if(!isInBounds(start) || !isInBounds(goal))
+            if(!board.isInBounds(start) || !board.isInBounds(goal))
                 return std::list<Vector2D>();
 
             std::list<Node*> openNodes;
-            Node* startNode = &board[start.x][start.y];
+            Node* startNode = board.getNodePtr(start);
             startNode->costSoFar = 0;
             startNode->heuristic = getHeuristic(startNode->position, goal);
             openNodes.push_back(startNode);
             Node* currNode;
-            //printf("starting A* loop...\n");
             do{
                 currNode = openNodes.front();
                 openNodes.pop_front();
 
-                //printf("current node: (%d, %d)\n", currNode->position.x, currNode->position.y);
                 if(VISUALIZE)
-                    Visualizer::visualize(board, boardSize, goal);
+                   Visualizer::visualize(board, goal);
 
                 currNode->wasClosed = true;
 
@@ -55,10 +51,8 @@ class PathFinder{
                     if((*it)->isObstacle || (*it)->wasClosed)
                         continue;
 
-                    //printf("  neighbour: (%d, %d) ", (*it)->position.x, (*it)->position.y);
                     (*it)->heuristic = getHeuristic((*it)->position, goal);
                     int potentialCostSoFar = currNode->costSoFar + INLINE_COST;
-                    //printf("potentialCost: %d, costSoFar: %d", potentialCostSoFar, (*it)->costSoFar);
 
                     if(potentialCostSoFar < (*it)->costSoFar){
                         (*it)->costSoFar = potentialCostSoFar;
@@ -76,8 +70,6 @@ class PathFinder{
                             }
                         }
                     }
-
-                    //printf("\n");
                 }
 
                 for(std::list<Node*>::iterator it = currNode->diagonalNeighbours.begin(); it != currNode->diagonalNeighbours.end(); it++){
@@ -122,51 +114,7 @@ class PathFinder{
         }
 
     private:
-        Node** board;
-        Vector2D boardSize;
-
-        void initializeBoard(){
-            board = new Node*[boardSize.x];
-                for(int i=0; i<boardSize.x; i++){
-                    board[i] = new Node[boardSize.y];
-
-                    for(int j=0; j<boardSize.y; j++)
-                        board[i][j] = Node(Vector2D(i, j));
-                }
-        }
-
-        void initializeObstacles(Vector2D* obstacles, int obstaclesNumber){
-             for(int i=0; i<obstaclesNumber; i++)
-                board[obstacles[i].x][obstacles[i].y].isObstacle = true;
-        }
-
-        void initializeNeighbours(){
-            for(int i=0; i<boardSize.x; i++){
-                for(int j=0; j<boardSize.y; j++){
-                    if(j > 0)
-                        board[i][j].inlineNeighbours.push_back(&board[i][j-1]);
-                    if(i+1 < boardSize.x)
-                        board[i][j].inlineNeighbours.push_back(&board[i+1][j]);
-                    if(j+1 < boardSize.y)
-                        board[i][j].inlineNeighbours.push_back(&board[i][j+1]);
-                    if(i > 0)
-                        board[i][j].inlineNeighbours.push_back(&board[i-1][j]);
-
-                    if(i > 0 && j > 0)
-                        board[i][j].diagonalNeighbours.push_back(&board[i-1][j-1]);
-                    if(i+1 < boardSize.x && j > 0)
-                        board[i][j].diagonalNeighbours.push_back(&board[i+1][j-1]);
-                    if(i+1 < boardSize.x && j+1 < boardSize.y)
-                        board[i][j].diagonalNeighbours.push_back(&board[i+1][j+1]);
-                    if(i > 0 && j+1 < boardSize.y)
-                        board[i][j].diagonalNeighbours.push_back(&board[i-1][j+1]);
-                }
-            }
-        }
-
-        bool isInBounds(Vector2D p){
-            return (p.x >= 0 && p.x < boardSize.x && p.y >= 0 && p.y < boardSize.y);
-        }
+        Board board;
 
         int getHeuristic(Vector2D &start, Vector2D &goal){
             int xDiff = std::abs(start.x - goal.x);
@@ -174,17 +122,6 @@ class PathFinder{
             int minDiff = std::min(xDiff, yDiff);
             int maxDiff = std::max(xDiff, yDiff);
             return (DIAGONAL_COST)*minDiff + (INLINE_COST)*(maxDiff-minDiff);
-        }
-
-       void resetBoard(Node (&board)[WIDTH][HEIGHT]){
-            for(int i=0; i<boardSize.x; i++){
-                for(int j=0; j<boardSize.y; j++){
-                    board[i][j].parent = NULL;
-                    board[i][j].costSoFar = INT_MAX;
-                    board[i][j].heuristic = INT_MAX;
-                    board[i][j].wasClosed = false;
-                }
-            }
         }
 };
 
