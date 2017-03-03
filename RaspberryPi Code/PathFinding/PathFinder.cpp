@@ -2,7 +2,6 @@
 #include <climits>
 #include <cstdio>
 
-//TODO mix going diagonally and inlinelly to make path shorter for robot
 //TODO make class responsible for friendly obstacles creation
 
 #define VISUALIZE 1 //0 for no visualization, 1 for visualization
@@ -29,77 +28,26 @@ class PathFinder{
             if(!board.isInBounds(start) || !board.isInBounds(goal))
                 return std::list<Vector2D>();
 
-            std::list<Node*> openNodes;
+            openNodes.clear();
+
             Node* startNode = board.getNodePtr(start);
             startNode->costSoFar = 0;
             startNode->heuristic = getHeuristic(startNode->position, goal);
             openNodes.push_back(startNode);
-            Node* currNode;
-            do{
-                currNode = openNodes.front();
-                openNodes.pop_front();
 
+            do{
                 if(VISUALIZE)
                    Visualizer::visualize(board, goal);
 
+                currNode = openNodes.front();
+                openNodes.pop_front();
                 currNode->wasClosed = true;
-
-                while(!openNodes.empty() && openNodes.front()->wasClosed)
-                    openNodes.pop_front();
-
-                for(std::list<Node*>::iterator it = currNode->inlineNeighbours.begin(); it != currNode->inlineNeighbours.end(); it++){
-                    if((*it)->isObstacle || (*it)->wasClosed)
-                        continue;
-
-                    (*it)->heuristic = getHeuristic((*it)->position, goal);
-                    int potentialCostSoFar = currNode->costSoFar + INLINE_COST;
-
-                    if(potentialCostSoFar < (*it)->costSoFar){
-                        (*it)->costSoFar = potentialCostSoFar;
-                        (*it)->parent = currNode;
-
-                        for(std::list<Node*>::iterator openIt = openNodes.begin();; openIt++){
-                            if(openIt == openNodes.end()){
-                                openNodes.push_back((*it));
-                                break;
-                            }
-
-                            if((*it)->costSoFar+(*it)->heuristic <= (*openIt)->costSoFar+(*openIt)->heuristic){
-                                openNodes.insert(openIt, (*it));
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                for(std::list<Node*>::iterator it = currNode->diagonalNeighbours.begin(); it != currNode->diagonalNeighbours.end(); it++){
-                    if((*it)->isObstacle || (*it)->wasClosed)
-                        continue;
-
-                    (*it)->heuristic = getHeuristic((*it)->position, goal);
-                    int potentialCostSoFar = currNode->costSoFar + DIAGONAL_COST;
-
-                    if(potentialCostSoFar < (*it)->costSoFar){
-                        (*it)->costSoFar = potentialCostSoFar;
-                        (*it)->parent = currNode;
-
-                        for(std::list<Node*>::iterator openIt = openNodes.begin();; openIt++){
-                            if(openIt == openNodes.end()){
-                                openNodes.push_back((*it));
-                                break;
-                            }
-
-                            if((*it)->costSoFar+(*it)->heuristic <= (*openIt)->costSoFar+(*openIt)->heuristic){
-                                openNodes.insert(openIt, (*it));
-                                break;
-                            }
-                        }
-                    }
-                }
+                popClosedNodes(openNodes);
+                updateNodes(currNode->inlineNeighbours, INLINE_COST, goal);
+                updateNodes(currNode->diagonalNeighbours, DIAGONAL_COST, goal);
 
                 if(openNodes.empty())
                     return std::list<Vector2D>();
-
             }
             while(currNode->position != goal);
 
@@ -115,6 +63,29 @@ class PathFinder{
 
     private:
         Board board;
+        std::list<Node*> openNodes;
+        Node* currNode;
+
+        void popClosedNodes(std::list<Node*> &nodes){
+            while(!nodes.empty() && nodes.front()->wasClosed)
+                nodes.pop_front();
+        }
+
+        void updateNodes(std::list<Node*> &nodes, int cost, Vector2D &goal){
+            for(std::list<Node*>::iterator it = nodes.begin(); it != nodes.end(); it++){
+                if((*it)->isObstacle || (*it)->wasClosed)
+                    continue;
+
+                (*it)->heuristic = getHeuristic((*it)->position, goal);
+                int potentialCostSoFar = currNode->costSoFar + INLINE_COST;
+
+                if(potentialCostSoFar < (*it)->costSoFar){
+                    (*it)->costSoFar = potentialCostSoFar;
+                    (*it)->parent = currNode;
+                    insertIntoOpenNodes(*it);
+                }
+            }
+        }
 
         int getHeuristic(Vector2D &start, Vector2D &goal){
             int xDiff = std::abs(start.x - goal.x);
@@ -122,6 +93,20 @@ class PathFinder{
             int minDiff = std::min(xDiff, yDiff);
             int maxDiff = std::max(xDiff, yDiff);
             return (DIAGONAL_COST)*minDiff + (INLINE_COST)*(maxDiff-minDiff);
+        }
+
+        void insertIntoOpenNodes(Node* node){
+            for(std::list<Node*>::iterator openIt = openNodes.begin();; openIt++){
+                if(openIt == openNodes.end()){
+                    openNodes.push_back(node);
+                    break;
+                }
+
+                if(node->costSoFar+node->heuristic <= (*openIt)->costSoFar+(*openIt)->heuristic){
+                    openNodes.insert(openIt, node);
+                    break;
+                }
+            }
         }
 };
 
