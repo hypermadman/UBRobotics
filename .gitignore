@@ -1,5 +1,8 @@
-
 .DS_Store
 *.swp
 
+#c++ object files
 *.o
+
+#executive file
+RaspberryPi\ Code/PathFinding/PathFinder
